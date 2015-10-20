@@ -31,7 +31,6 @@ def fetch_page_content(site='', params='', post={}):
     data = f.read()
 
     end = time.time()
-
     global t1
     t1 = t1 + (end - start)
 
@@ -60,7 +59,15 @@ def logger(name=__name__, message=''):
 # extract data
 
 
+t2 = 0.0
+t3 = 0.0
+t4 = 0.0
+
+
 def extract_data(data='', dirs=''):
+
+    start = time.time()
+
     if not data:
         return False
     decoded = json.loads(data)
@@ -69,23 +76,42 @@ def extract_data(data='', dirs=''):
 
         pid = str(item['positionId'])
 
-        f = open(dirs+'data/position_lagou_uniq_ids.txt', 'a+')
+        start1 = time.time()
+
+        f = open(dirs + 'data/position_lagou_uniq_ids.txt', 'a+')
         # in order to read lines, move file pointer to the beginning
         f.seek(0, 0)
         ids = f.readlines()
+
+        end1 = time.time()
+        global t3
+        t3 = t3 + (end1 - start1)
+
+        start2 = time.time()
+
         duplicate = None
         for existed_id in ids:
             if existed_id.strip() == pid:
                 duplicate = 1
                 break
+
+        end2 = time.time()
+        global t4
+        t4 = t4 + (end2 - start2)
+
         if not duplicate:
             f.write(pid + '\n')
             decoded_item = json.dumps(item).decode('raw_unicode_escape')
-            append_to_file(dirs+'data/position_lagou.txt',
+            append_to_file(dirs + 'data/position_lagou.txt',
                            decoded_item)
             cnt_new = cnt_new + 1
         f.close()
     print str(cnt_new) + ' new positions were added'
+
+    end = time.time()
+    global t2
+    t2 = t2 + (end - start)
+
     return cnt_new
 
 # main function
@@ -109,10 +135,12 @@ def main():
 
     end_time = time.time()
 
+    global t1, t2, t3, t4
     # 日志
     logger(message=time.strftime('%Y-%m-%d %H:%M:%S')
            + ', finished in ' + '%.2f' % (end_time - start_time)
-           + ' secs, ' + str(cnt_new) + ' items added. t1 = ' + '%.4f' % t1)
+           + ' secs, ' + str(cnt_new)
+           + ' items added. network = %.4f , process = %.4f, readlines = %.4f, check_dups = %.4f' % (t1, t2, t3, t4))
 
 
 main()
