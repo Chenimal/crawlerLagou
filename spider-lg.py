@@ -17,6 +17,10 @@ class SpiderLagou():
     # constructor
     def __init__(self):
         self.path = sys.path[0]
+        self.url_base = 'http://www.lagou.com'
+        self.url_params = '/jobs/positionAjax.json?px=new'
+        self.data_ids = 'position_lagou_uniq_ids.txt'
+        self.data_raw = 'position_lagou.txt'
 
     # append to file
     def append_to_file(self, filepath, contents):
@@ -32,12 +36,11 @@ class SpiderLagou():
         return self.append_to_file(path, message)
 
     # get content from web
-    def fetch_page_content(self, site='', params='', post={}):
-        if site == '':
-            return False
+    def fetch_page_content(self, post={}):
         start = time.time()
         f = urllib2.urlopen(
-            url=site + params, data=urllib.urlencode(post), timeout=10)
+            url=self.url_base + self.url_params,
+            data=urllib.urlencode(post), timeout=10)
         data = f.read()
         self.t1 = self.t1 + (time.time() - start)
         return data
@@ -51,7 +54,7 @@ class SpiderLagou():
         for item in decoded['content']['result']:
             s3 = time.time()
             pid = str(item['positionId'])
-            f = open(self.path + '/data/position_lagou_uniq_ids.txt', 'a+')
+            f = open(self.path + '/data/' + self.data_ids, 'a+')
             f.seek(0, 0)
             ids = f.readlines()
             self.t3 = self.t3 + (time.time() - s3)
@@ -66,7 +69,7 @@ class SpiderLagou():
                 f.write(pid + '\n')
                 decoded_item = json.dumps(item).decode('raw_unicode_escape')
                 self.append_to_file(
-                    self.path + '/data/position_lagou.txt', decoded_item)
+                    self.path + '/data/' + self.data_raw, decoded_item)
                 cnt_new = cnt_new + 1
             f.close()
         print str(cnt_new) + ' new positions were added'
@@ -77,15 +80,10 @@ class SpiderLagou():
     # main function
     def run(self):
         start_time = time.time()
-        params = {
-            'url_base': 'http://www.lagou.com',
-            'url_params': '/jobs/positionAjax.json?px=new',
-        }
         cnt_new = 0
         for i in range(1, 31):
             post_data = {'pn': i}
-            raw_data = self.fetch_page_content(
-                params['url_base'], params['url_params'], post_data)
+            raw_data = self.fetch_page_content(post_data)
             cnt_new = cnt_new + self.extract_data(raw_data)
         end_time = time.time()
         print 'time spent: %.2f' % (end_time - start_time)
