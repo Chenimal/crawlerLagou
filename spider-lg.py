@@ -90,7 +90,7 @@ class SpiderLagou():
         end_time = time.time()
         print 'time spent: %.2f' % (end_time - start_time)
         # 日志
-        self.logger('test', message='%s, finished in %.2f  secs, %d items added. network = %.4f , process = %.4f, readlines = %.4f, check_dups = %.4f' %
+        self.logger(message='%s, finished in %.2f  secs, %d items added. network = %.4f , process = %.4f, readlines = %.4f, check_dups = %.4f' %
                     (time.strftime('%Y-%m-%d %H:%M:%S'), (end_time - start_time), cnt_new, self.t1, self.t2, self.t3, self.t4))
 
 a = SpiderLagou()
