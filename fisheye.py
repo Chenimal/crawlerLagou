@@ -11,4 +11,4 @@ def notify(title='', subtitle='', message='', url=''):
     s = '-subtitle {!r}'.format(subtitle)
     m = '-message {!r}'.format(message)
     u = '-open {!r}'.format(url)
-    os.system('terminal-notifier {}'.format(' '.join([m, t, s, u])))
+    os.system('/usr/local/bin/terminal-notifier {}'.format(' '.join([m, t, s, u])))
