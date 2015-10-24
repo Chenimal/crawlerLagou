@@ -45,6 +45,12 @@ class SpiderLagou():
         self.t1 = self.t1 + (time.time() - start)
         return data
 
+    # check duplicate
+    def has_duplicate(self, a, b):
+        if a in b:
+            return True
+        return False
+
     def extract_data(self, data=''):
         start = time.time()
         if not data:
@@ -60,8 +66,7 @@ class SpiderLagou():
             self.t3 = self.t3 + (time.time() - s3)
             s4 = time.time()
             pid = pid + '\n'
-            if pid not in ids:
-                print "%s not exists yet" % pid
+            if not self.has_duplicate(pid, ids):
                 f.write(pid)
                 decoded_item = json.dumps(item).decode('raw_unicode_escape')
                 self.append_to_file(
