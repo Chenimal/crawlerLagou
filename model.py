@@ -61,14 +61,15 @@ class model():
         # read file and start inserting
         f = open(filePath, 'r')
         i = 0
+        val = []
         for line in f:
             if i % 1000 == 0:
                 print '%d item added' % i
             line = json.loads(line)
-            vals = []
             for item in fields:
-                vals.append(line[item])
-            self.cursor.execute(query, vals)
+                val.append(line[item])
+            self.cursor.execute(query, val)
+            val = []
             i = i + 1
         print "Import %d records" % (i)
         f.close()
