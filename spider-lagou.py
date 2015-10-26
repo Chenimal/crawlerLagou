@@ -1,12 +1,8 @@
-# -*- coding: utf-8 -*-
 import time
-import urllib2
-import urllib
-import sys
+import urllib.request
+import urllib.parse
 import json
-# resolve chinese character encoding problem
-reload(sys)
-sys.setdefaultencoding('utf8')
+import sys
 
 
 class SpiderLagou():
@@ -38,10 +34,11 @@ class SpiderLagou():
     # get content from web
     def fetch_page_content(self, post={}):
         start = time.time()
-        f = urllib2.urlopen(
+        f = urllib.request.urlopen(
             url=self.url_base + self.url_params,
-            data=urllib.urlencode(post), timeout=10)
-        data = f.read()
+            data=urllib.parse.urlencode(post).encode('utf8'),
+            timeout=10)
+        data = f.read().decode('utf8')
         self.t1 = self.t1 + (time.time() - start)
         return data
 
@@ -68,30 +65,34 @@ class SpiderLagou():
             pid = pid + '\n'
             if not self.has_duplicate(pid, ids):
                 f.write(pid)
-                decoded_item = json.dumps(item).decode('raw_unicode_escape')
+                encoded_item = json.dumps(item, ensure_ascii=False)
                 self.append_to_file(
-                    self.path + '/data/' + self.data_raw, decoded_item)
+                    self.path + '/data/' + self.data_raw, encoded_item)
                 cnt_new = cnt_new + 1
             self.t4 = self.t4 + (time.time() - s4)
             f.close()
-        print str(cnt_new) + ' new positions were added'
+        print(str(cnt_new) + ' new positions were added')
         end = time.time()
         self.t2 = self.t2 + (end - start)
         return cnt_new
 
     # main function
     def run(self):
-        start_time = time.time()
-        cnt_new = 0
-        for i in range(1, 31):
-            post_data = {'pn': i}
-            raw_data = self.fetch_page_content(post_data)
-            cnt_new = cnt_new + self.extract_data(raw_data)
-        end_time = time.time()
-        print 'time spent: %.2f' % (end_time - start_time)
-        # 日志
-        self.logger(message='%s, finished in %.2f  secs, %d items added. network = %.4f , process = %.4f, readlines = %.4f, check_dups = %.4f' %
-                    (time.strftime('%Y-%m-%d %H:%M:%S'), (end_time - start_time), cnt_new, self.t1, self.t2, self.t3, self.t4))
+        try:
+            start_time = time.time()
+            cnt_new = 0
+            for i in range(1, 31):
+                post_data = {'pn': i}
+                raw_data = self.fetch_page_content(post_data)
+                cnt_new = cnt_new + self.extract_data(raw_data)
+            end_time = time.time()
+            print('time spent: %.2f' % (end_time - start_time))
+            # 日志
+            self.logger(self.__class__.__name__, '%s, finished in %.2f  secs, %d items added. network = %.4f , process = %.4f, readlines = %.4f, check_dups = %.4f' %
+                        (time.strftime('%Y-%m-%d %H:%M:%S'), (end_time - start_time), cnt_new, self.t1, self.t2, self.t3, self.t4))
+        except Exception as e:
+            self.logger(self.__class__.__name__, time.strftime(
+                '%Y-%m-%d %H:%M:%S\t') + '[error] ' + str(e))
 
 a = SpiderLagou()
 a.run()
