@@ -5,6 +5,17 @@ import json
 import sys
 import lib.functions
 
+'''
+Crawler for www.lagou.com
+Author: Chen Sun
+Since: 10.21.2015
+Version: 1.0.0
+
+Todo:
+Use sqlite instead of file
+Use cache instead of I/O
+'''
+
 
 class SpiderLagou():
 
@@ -23,7 +34,7 @@ class SpiderLagou():
     def append_to_file(self, filepath, contents):
         if filepath == '':
             return False
-        f = open(filepath, 'a')
+        f = open(filepath, 'a', encoding='utf-8')
         f.write(contents + '\n')
         f.close()
 
@@ -33,7 +44,7 @@ class SpiderLagou():
         f = urllib.request.urlopen(
             url=self.url_base + self.url_params,
             data=urllib.parse.urlencode(post).encode('utf8'),
-            timeout=10)
+            timeout=30)
         data = f.read().decode('utf8')
         self.t1 = self.t1 + (time.time() - start)
         return data
@@ -53,7 +64,8 @@ class SpiderLagou():
         for item in decoded['content']['result']:
             s3 = time.time()
             pid = str(item['positionId'])
-            f = open(self.path + '/data/' + self.data_ids, 'a+')
+            f = open(
+                self.path + '/data/' + self.data_ids, 'a+',  encoding='utf-8')
             f.seek(0, 0)
             ids = f.readlines()
             self.t3 = self.t3 + (time.time() - s3)
@@ -75,6 +87,7 @@ class SpiderLagou():
     # main function
     def run(self):
         try:
+            print('Task start.')
             start_time = time.time()
             cnt_new = 0
             for i in range(1, 31):
@@ -82,11 +95,13 @@ class SpiderLagou():
                 raw_data = self.fetch_page_content(post_data)
                 cnt_new = cnt_new + self.extract_data(raw_data)
             end_time = time.time()
-            print('time spent: %.2f' % (end_time - start_time))
+            print('Time spent: %.2f' % (end_time - start_time))
             # 日志
             lib.functions.logger(self.__class__.__name__, '%s, finished in %.2f  secs, %d items added. network = %.4f , process = %.4f, readlines = %.4f, check_dups = %.4f' %
                                  (time.strftime('%Y-%m-%d %H:%M:%S'), (end_time - start_time), cnt_new, self.t1, self.t2, self.t3, self.t4))
+            print('Task end.')
         except Exception as e:
+            print(str(e))
             lib.functions.logger(self.__class__.__name__, time.strftime(
                 '%Y-%m-%d %H:%M:%S\t') + '[error] ' + str(e))
 

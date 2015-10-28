@@ -1,18 +1,27 @@
-# -*- coding: utf-8 -*-
-import MySQLdb
-import json
 import sys
-import time
-# resolve chinese character encoding problem
-reload(sys)
-sys.setdefaultencoding('utf8')
+import sqlite3
+import json
 
 
 class model():
 
-    def __init__(self, host='localhost', user='root', db='spider', charset='utf8'):
-        conn = MySQLdb.connect(host=host, user=user, db=db, charset='utf8')
-        self.cursor = conn.cursor()
+    def __init__(self):
+        try:
+            self.db = 'db_crawler'
+            self.conn = sqlite3.connect(self.db)
+            self.cursor = self.conn.cursor()
+        except Exception as e:
+            print('[error]' + str(e))
+
+    def create_table(self, t_name, file):
+        try:
+            self.cursor.execute('DROP TABLE IF EXISTS ' + t_name)
+            with open(sys.path[0] + '/' + file, 'r') as f:
+                q = f.read()
+                self.cursor.execute(q)
+        except Exception as e:
+            print('[Error]: ' + str(e))
+            return
 
     # show table contents
     def find(self, query):
@@ -64,18 +73,18 @@ class model():
         val = []
         for line in f:
             if i % 1000 == 0:
-                print '%d item added' % i
+                print('%d item added' % i)
             line = json.loads(line)
             for item in fields:
                 val.append(line[item])
             self.cursor.execute(query, val)
             val = []
             i = i + 1
-        print "Import %d records" % (i)
+        print("Import %d records" % (i))
         f.close()
 
 m = model()
 m.importFromFileToTable(
-    filePath='/Users/chen/web/personal/python/data/position_lagou.txt',
+    filePath='data/position_lagou.txt',
     tableName='lagou_basic',
     excludeFields=['id', 'company_label_list', 'log_time'])

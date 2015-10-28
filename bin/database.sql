@@ -1,8 +1,5 @@
-create database if spider;
-set names utf8;
-drop table if exists `lagou_basic`;
 create table `lagou_basic`(
-    `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+    `id` INTEGER PRIMARY KEY AUTOINCREMENT,
     `order_by` int(11) not null default '0',
     `leader_name` varchar(64) not null default '',
     `calc_score` varchar(64) not null default '',
@@ -27,7 +24,7 @@ create table `lagou_basic`(
     `position_first_type` varchar(64) not null default '',
     `rel_score` int(11) not null default '0',
     `company_label_list` varchar(64) not null default '',
-    `position_id` int(11) not null default '0',
+    `position_id` int(11) UNIQUE not null default '0',
     `random_score` int(11) not null default '0',
     `company_short_name` varchar(64) not null default '',
     `search_score` varchar(64) not null default '',
@@ -35,7 +32,5 @@ create table `lagou_basic`(
     `hr_score` int(11) not null default '0',
     `position_type` varchar(64) not null default '',
     `position_advantage` varchar(64) not null default '',
-    `adjust_score` varchar(64) not null default '',
-    primary key(`id`),
-    unique key `position_id` (`position_id`)
-) ENGINE = MyISAM DEFAULT CHARSET = utf8;
+    `adjust_score` varchar(64) not null default ''
+);
