@@ -3,6 +3,7 @@ import urllib.request
 import urllib.parse
 import json
 import sys
+import lib.functions
 
 
 class SpiderLagou():
@@ -25,11 +26,6 @@ class SpiderLagou():
         f = open(filepath, 'a')
         f.write(contents + '\n')
         f.close()
-
-    # write log
-    def logger(self, name=__name__, message=''):
-        path = self.path + '/log/' + name + '.log'
-        return self.append_to_file(path, message)
 
     # get content from web
     def fetch_page_content(self, post={}):
@@ -88,10 +84,10 @@ class SpiderLagou():
             end_time = time.time()
             print('time spent: %.2f' % (end_time - start_time))
             # 日志
-            self.logger(self.__class__.__name__, '%s, finished in %.2f  secs, %d items added. network = %.4f , process = %.4f, readlines = %.4f, check_dups = %.4f' %
-                        (time.strftime('%Y-%m-%d %H:%M:%S'), (end_time - start_time), cnt_new, self.t1, self.t2, self.t3, self.t4))
+            lib.functions.logger(self.__class__.__name__, '%s, finished in %.2f  secs, %d items added. network = %.4f , process = %.4f, readlines = %.4f, check_dups = %.4f' %
+                                 (time.strftime('%Y-%m-%d %H:%M:%S'), (end_time - start_time), cnt_new, self.t1, self.t2, self.t3, self.t4))
         except Exception as e:
-            self.logger(self.__class__.__name__, time.strftime(
+            lib.functions.logger(self.__class__.__name__, time.strftime(
                 '%Y-%m-%d %H:%M:%S\t') + '[error] ' + str(e))
 
 a = SpiderLagou()
