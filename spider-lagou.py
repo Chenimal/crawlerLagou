@@ -4,15 +4,16 @@ import urllib.parse
 import json
 import sys
 import lib.functions
+import model
 
 '''
 Crawler for www.lagou.com
 Author: Chen Sun
 Since: 10.21.2015
-Version: 1.0.0
+Version: 1.1.0
 
 Todo:
-Use sqlite instead of file
+import exsting dat into db
 Use cache instead of I/O
 '''
 
@@ -24,84 +25,66 @@ class SpiderLagou():
 
     # constructor
     def __init__(self):
-        self.path = sys.path[0]
+        self.table = 'lagou_basic'
+        self.model = model.dbSqlite()
         self.url_base = 'http://www.lagou.com'
         self.url_params = '/jobs/positionAjax.json?px=new'
-        self.data_ids = 'position_lagou_uniq_ids.txt'
-        self.data_raw = 'position_lagou.txt'
 
-    # append to file
-    def append_to_file(self, filepath, contents):
-        if filepath == '':
-            return False
-        f = open(filepath, 'a', encoding='utf-8')
-        f.write(contents + '\n')
-        f.close()
-
-    # get content from web
-    def fetch_page_content(self, post={}):
+    # single request(page)
+    def fetchPageContent(self, post={}):
         start = time.time()
         f = urllib.request.urlopen(
             url=self.url_base + self.url_params,
-            data=urllib.parse.urlencode(post).encode('utf8'),
+            data=urllib.parse.urlencode(post).encode('utf-8'),
             timeout=30)
-        data = f.read().decode('utf8')
-        self.t1 = self.t1 + (time.time() - start)
-        return data
+        d = f.read().decode('utf-8')
+        d = json.loads(d)
+        self.t1 = self.t1 + time.time() - start
+        return d['content']['result']
 
-    # check duplicate
-    def has_duplicate(self, a, b):
-        if a in b:
-            return True
-        return False
+    # save content for single request(page)
+    def savePageContent(self, data):
+        c = 0
+        for i in data:
+            s = self.addRecord(i)
+            c = c+1 if s else c
+        return c
 
-    def extract_data(self, data=''):
+    # for single new record
+    def addRecord(self, data):
+        # detemine if it's existed
         start = time.time()
-        if not data:
+        r = self.model.findAll("select * from %s where position_id = '%s'" % (self.table, data['positionId']))
+        self.t2 = self.t2 + time.time() - start
+        if r:
             return False
-        decoded = json.loads(data)
-        cnt_new = 0
-        for item in decoded['content']['result']:
-            s3 = time.time()
-            pid = str(item['positionId'])
-            f = open(
-                self.path + '/data/' + self.data_ids, 'a+',  encoding='utf-8')
-            f.seek(0, 0)
-            ids = f.readlines()
-            self.t3 = self.t3 + (time.time() - s3)
-            s4 = time.time()
-            pid = pid + '\n'
-            if not self.has_duplicate(pid, ids):
-                f.write(pid)
-                encoded_item = json.dumps(item, ensure_ascii=False)
-                self.append_to_file(
-                    self.path + '/data/' + self.data_raw, encoded_item)
-                cnt_new = cnt_new + 1
-            self.t4 = self.t4 + (time.time() - s4)
-            f.close()
-        print(str(cnt_new) + ' new positions were added')
-        end = time.time()
-        self.t2 = self.t2 + (end - start)
-        return cnt_new
+        start = time.time()
+        p = list(map(lambda x: data.get(x),self.insert_param))
+        self.model.cursor.execute(self.insert_query, p)
+        self.model.conn.commit()
+        self.t3 = self.t3 + time.time() - start
+        return True
 
     # main function
     def run(self):
         try:
-            print('Task start.')
             start_time = time.time()
-            cnt_new = 0
+            self.insert_query = self.model.insertQuery('lagou_basic')
+            self.insert_param = self.model.insertParam('lagou_basic')
+            total_cnt = 0
             for i in range(1, 31):
                 post_data = {'pn': i}
-                raw_data = self.fetch_page_content(post_data)
-                cnt_new = cnt_new + self.extract_data(raw_data)
+                d = self.fetchPageContent(post_data)
+                c = self.savePageContent(d)
+                print('Page %d : %d items were added' % (i,c))
+                total_cnt = total_cnt + c
             end_time = time.time()
             print('Time spent: %.2f' % (end_time - start_time))
             # 日志
-            lib.functions.logger(self.__class__.__name__, '%s, finished in %.2f  secs, %d items added. network = %.4f , process = %.4f, readlines = %.4f, check_dups = %.4f' %
-                                 (time.strftime('%Y-%m-%d %H:%M:%S'), (end_time - start_time), cnt_new, self.t1, self.t2, self.t3, self.t4))
-            print('Task end.')
+            lib.functions.logger(self.__class__.__name__, '%s  Total time: %.2f secs. New item: %d. Request: %.4f. Check duplicates: %.4f, Save: %.4f' %
+                                 (time.strftime('%Y-%m-%d %H:%M:%S'), (end_time - start_time), total_cnt, self.t1, self.t2, self.t3))
         except Exception as e:
-            print(str(e))
+            print('Error:' + str(e))
             lib.functions.logger(self.__class__.__name__, time.strftime(
                 '%Y-%m-%d %H:%M:%S\t') + '[error] ' + str(e))
 

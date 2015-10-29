@@ -1,3 +1,4 @@
+-- company_label_list needs to store to another table
 create table `lagou_basic`(
     `id` INTEGER PRIMARY KEY AUTOINCREMENT,
     `order_by` int(11) not null default '0',
@@ -19,11 +20,10 @@ create table `lagou_basic`(
     `position_name` varchar(64) not null default '',
     `company_name` varchar(64) not null default '',
     `job_nature` varchar(64) not null default '',
-    `positon_types_map` varchar(64) default null,
+    `position_types_map` varchar(64) default null,
     `total_count` int(11) not null default '0',
     `position_first_type` varchar(64) not null default '',
     `rel_score` int(11) not null default '0',
-    `company_label_list` varchar(64) not null default '',
     `position_id` int(11) UNIQUE not null default '0',
     `random_score` int(11) not null default '0',
     `company_short_name` varchar(64) not null default '',

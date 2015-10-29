@@ -1,22 +1,22 @@
 import sys
 import sqlite3
 import json
+import lib.functions
 
-
-class model():
+class dbSqlite():
 
     def __init__(self):
         try:
-            self.db = 'db_crawler'
+            self.db = 'data/db_crawler'
             self.conn = sqlite3.connect(self.db)
             self.cursor = self.conn.cursor()
         except Exception as e:
             print('[error]' + str(e))
 
-    def create_table(self, t_name, file):
+    def createTable(self, t_name, file):
         try:
             self.cursor.execute('DROP TABLE IF EXISTS ' + t_name)
-            with open(sys.path[0] + '/' + file, 'r') as f:
+            with open(sys.path[0] + '/bin/' + file, 'r') as f:
                 q = f.read()
                 self.cursor.execute(q)
         except Exception as e:
@@ -24,45 +24,42 @@ class model():
             return
 
     # show table contents
-    def find(self, query):
+    def findAll(self, query):
         self.cursor.execute(query)
         res = self.cursor.fetchall()
         return res
 
-    # in case that we want to fetch many columns but don't want to type all,
-    # so only exclude few
-    def excludeFields(self, tableName, excludeFields=[]):
-        # get fields names
-        query = 'select COLUMN_NAME from information_schema.columns where table_name=\'%s\' ' % (
-            tableName)
-        if excludeFields:
-            excludeFields = map(lambda s: '\'%s\'' % s, excludeFields)
-            query = query + \
-                ' and COLUMN_NAME not in (%s)' % (','.join(excludeFields))
-        self.cursor.execute(query)
-        fields = map(lambda s: s[0], self.cursor.fetchall())
+    # get table fields by name
+    def getTableFields(self, tableName):
+        if tableName == 'lagou_basic':
+            fields = [
+                'order_by', 'leader_name', 'calc_score', 'company_size', 'count_adjusted', 'work_year', 'education',
+                'finance_stage', 'city', 'create_time_sort', 'company_id', 'industry_field', 'create_time', 'score', 'ad_word',
+                'salary', 'position_name', 'company_name', 'job_nature', 'position_types_map', 'total_count', 'position_first_type',
+                'rel_score', 'position_id', 'random_score', 'company_short_name', 'search_score', 'have_deliver',
+                'hr_score', 'position_type', 'position_advantage', 'adjust_score'
+            ]
         return fields
 
-    # testA => test_a
-    def camelToUnderline(self, string):
-        result = ''
-        for char in string:
-            result += char if char.islower() else '_' + char.lower()
-        return result
+    # generate insert query
+    def insertQuery(self, tableName):
+        f = self.getTableFields(tableName)
+        s = ','.join(['?' for i in range(0, len(f))])
+        f = ','.join(f)
+        q = 'insert into %s(%s) values(%s)' % (tableName, f, s)
+        return q
 
-    # test_a => testA
-    def underlineToCamel(self, string):
-        result = ''
-        for substr in string.split('_'):
-            result += substr if result == '' else substr.capitalize()
-        return result
+    def insertParam(self, tableName):
+        f = self.getTableFields(tableName)
+        f = list(map(lib.functions.underlineToCamel, f))
+        return f
 
     # import data into table from file
     def importFromFileToTable(self, filePath, tableName, excludeFields=[]):
         # generate query
-        fields = self.excludeFields(tableName, excludeFields)
+        fields = self.getTableFields(tableName)
         fields_str = ','.join(fields)
-        s = ['%s' for i in range(0, len(fields))]
+        s = ['?' for i in range(0, len(fields))]
         query = "insert into " + tableName + \
                 "(" + fields_str + ") values(" + ','.join(s) + ")"
         # corresponding fields
@@ -83,8 +80,10 @@ class model():
         print("Import %d records" % (i))
         f.close()
 
-m = model()
+'''m = dbSqlite()
+print(m.getTableFields('lagou_basic'))
+m.createTable('lagou_basic','database.sql')
 m.importFromFileToTable(
     filePath='data/position_lagou.txt',
     tableName='lagou_basic',
-    excludeFields=['id', 'company_label_list', 'log_time'])
+    excludeFields=['id', 'company_label_list', 'log_time'])'''
