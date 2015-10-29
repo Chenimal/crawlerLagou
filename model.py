@@ -1,17 +1,18 @@
 import sys
 import sqlite3
 import json
-import lib.functions
+import lib.functions as func
 
 class dbSqlite():
 
     def __init__(self):
         try:
-            self.db = 'data/db_crawler'
+            self.db = sys.path[0]+'/data/db_crawler'
             self.conn = sqlite3.connect(self.db)
             self.cursor = self.conn.cursor()
         except Exception as e:
             print('[error]' + str(e))
+            func.logger(self.__class__.__name__, str(e))
 
     def createTable(self, t_name, file):
         try:
@@ -20,7 +21,7 @@ class dbSqlite():
                 self.cursor.execute(q)
         except Exception as e:
             print('[Error]: ' + str(e))
-            return
+            func.logger(self.__class__.__name__, str(e))
 
     # show table contents
     def findAll(self, query):
@@ -51,7 +52,7 @@ class dbSqlite():
     # return list of keys which will be inserted into db
     def insertParam(self, tableName):
         f = self.getTableFields(tableName)
-        f = list(map(lib.functions.underlineToCamel, f))
+        f = list(map(func.underlineToCamel, f))
         return f
 
     # import data into table from file
