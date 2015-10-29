@@ -13,7 +13,8 @@ Since: 10.21.2015
 Version: 1.1.0
 
 Todo:
-import exsting dat into db
+create init file
+add another company types table
 Use cache instead of I/O
 '''
 
@@ -26,21 +27,25 @@ class SpiderLagou():
     # constructor
     def __init__(self):
         self.table = 'lagou_basic'
-        self.model = model.dbSqlite()
         self.url_base = 'http://www.lagou.com'
         self.url_params = '/jobs/positionAjax.json?px=new'
 
     # single request(page)
     def fetchPageContent(self, post={}):
-        start = time.time()
-        f = urllib.request.urlopen(
-            url=self.url_base + self.url_params,
-            data=urllib.parse.urlencode(post).encode('utf-8'),
-            timeout=30)
-        d = f.read().decode('utf-8')
-        d = json.loads(d)
-        self.t1 = self.t1 + time.time() - start
-        return d['content']['result']
+        try:
+            start = time.time()
+            f = urllib.request.urlopen(
+                url=self.url_base + self.url_params,
+                data=urllib.parse.urlencode(post).encode('utf-8'),
+                timeout=5)
+            d = f.read().decode('utf-8')
+            d = json.loads(d)
+            return d['content']['result']
+        except Exception as e:
+            print('Error: Page '+ str(post['pn']) +' ' + str(e))
+            return []
+        finally:
+            self.t1 = self.t1 + time.time() - start
 
     # save content for single request(page)
     def savePageContent(self, data):
@@ -69,9 +74,12 @@ class SpiderLagou():
     def run(self):
         try:
             start_time = time.time()
+            # generate insert query
+            self.model = model.dbSqlite()
             self.insert_query = self.model.insertQuery('lagou_basic')
             self.insert_param = self.model.insertParam('lagou_basic')
             total_cnt = 0
+            # requests with diffrent page number
             for i in range(1, 31):
                 post_data = {'pn': i}
                 d = self.fetchPageContent(post_data)
@@ -81,12 +89,13 @@ class SpiderLagou():
             end_time = time.time()
             print('Time spent: %.2f' % (end_time - start_time))
             # 日志
-            lib.functions.logger(self.__class__.__name__, '%s  Total time: %.2f secs. New item: %d. Request: %.4f. Check duplicates: %.4f, Save: %.4f' %
+            lib.functions.logger(self.__class__.__name__, '%s  Total time:%.2f secs. New item:%d. Request:%.4f. Check duplicates:%.4f, Save:%.4f' %
                                  (time.strftime('%Y-%m-%d %H:%M:%S'), (end_time - start_time), total_cnt, self.t1, self.t2, self.t3))
         except Exception as e:
-            print('Error:' + str(e))
+            print('Error: ' + str(e))
             lib.functions.logger(self.__class__.__name__, time.strftime(
                 '%Y-%m-%d %H:%M:%S\t') + '[error] ' + str(e))
+
 
 a = SpiderLagou()
 a.run()

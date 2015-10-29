@@ -15,7 +15,6 @@ class dbSqlite():
 
     def createTable(self, t_name, file):
         try:
-            self.cursor.execute('DROP TABLE IF EXISTS ' + t_name)
             with open(sys.path[0] + '/bin/' + file, 'r') as f:
                 q = f.read()
                 self.cursor.execute(q)
@@ -49,41 +48,30 @@ class dbSqlite():
         q = 'insert into %s(%s) values(%s)' % (tableName, f, s)
         return q
 
+    # return list of keys which will be inserted into db
     def insertParam(self, tableName):
         f = self.getTableFields(tableName)
         f = list(map(lib.functions.underlineToCamel, f))
         return f
 
     # import data into table from file
-    def importFromFileToTable(self, filePath, tableName, excludeFields=[]):
-        # generate query
-        fields = self.getTableFields(tableName)
-        fields_str = ','.join(fields)
-        s = ['?' for i in range(0, len(fields))]
-        query = "insert into " + tableName + \
-                "(" + fields_str + ") values(" + ','.join(s) + ")"
-        # corresponding fields
-        fields = map(self.underlineToCamel, fields)
-        # read file and start inserting
+    def importFromFileToTable(self, tableName,filePath):
+        insert_query = self.insertQuery(tableName)
+        insert_param = self.insertParam(tableName)
         f = open(filePath, 'r')
         i = 0
-        val = []
         for line in f:
             if i % 1000 == 0:
                 print('%d item added' % i)
-            line = json.loads(line)
-            for item in fields:
-                val.append(line[item])
-            self.cursor.execute(query, val)
-            val = []
-            i = i + 1
+            p = json.loads(line)
+            r = self.findAll("select * from %s where position_id = '%s'" % (tableName, p['positionId']))
+            if not r:
+                p = list(map(lambda x: p.get(x),insert_param))
+                self.cursor.execute(insert_query, p)
+                self.conn.commit()
+                i = i + 1
         print("Import %d records" % (i))
         f.close()
 
 '''m = dbSqlite()
-print(m.getTableFields('lagou_basic'))
-m.createTable('lagou_basic','database.sql')
-m.importFromFileToTable(
-    filePath='data/position_lagou.txt',
-    tableName='lagou_basic',
-    excludeFields=['id', 'company_label_list', 'log_time'])'''
+m.importFromFileToTable('data/position_lagou.txt','lagou_basic')'''
