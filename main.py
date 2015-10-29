@@ -10,12 +10,9 @@ import model
 Crawler for www.lagou.com
 Author: Chen Sun
 Since: 10.21.2015
-Version: 1.1.0
+Version: 1.1.2
 
 Todo:
-Use decorator to monitor time spent
-create init file
-add another company types table
 Use cache instead of I/O
 '''
 
@@ -28,6 +25,7 @@ class SpiderLagou():
     # constructor
     def __init__(self):
         self.table = 'lagou_basic'
+        self.table2 = 'lagou_company_label'
         self.url_base = 'http://www.lagou.com'
         self.url_params = '/jobs/positionAjax.json?px=new'
 
@@ -64,8 +62,13 @@ class SpiderLagou():
     # for single new record
     @func.timerAccumulate('t3')
     def addRecord(self, data):
-        p = list(map(lambda x: data.get(x),self.insert_param))
-        self.model.cursor.execute(self.insert_query, p)
+        p = list(map(lambda x: data.get(x),self.ip_1))
+        self.model.cursor.execute(self.iq_1, p)
+        self.model.conn.commit()
+        # insert into lagou_company_label
+        p = list(map(lambda x: (data['positionId'], x), data['companyLabelList']))
+        q = "insert into "+self.table2+" (position_id, label) values(?,?)"
+        self.model.cursor.executemany(q, p)
         self.model.conn.commit()
         return True
 
@@ -74,8 +77,8 @@ class SpiderLagou():
     def execute(self):
         # generate insert query
         self.model = model.dbSqlite()
-        self.insert_query = self.model.insertQuery('lagou_basic')
-        self.insert_param = self.model.insertParam('lagou_basic')
+        self.iq_1 = self.model.insertQuery(self.table)
+        self.ip_1 = self.model.insertParam(self.table)
         total_cnt = 0
         # requests with diffrent page number
         for i in range(1, 31):
@@ -88,6 +91,7 @@ class SpiderLagou():
 
     # trigger
     def fire(self):
+        total_cnt = 0
         try:
             total_cnt = self.execute()
         except Exception as e:

@@ -16,7 +16,7 @@ class dbSqlite():
 
     def createTable(self, t_name, file):
         try:
-            with open(sys.path[0] + '/bin/' + file, 'r') as f:
+            with open(sys.path[0] + '/' + file, 'r') as f:
                 q = f.read()
                 self.cursor.execute(q)
         except Exception as e:
@@ -39,6 +39,10 @@ class dbSqlite():
                 'rel_score', 'position_id', 'random_score', 'company_short_name', 'search_score', 'have_deliver',
                 'hr_score', 'position_type', 'position_advantage', 'adjust_score'
             ]
+        elif tableName == 'lagou_company_label':
+            fields = [
+                'position_id', 'label'
+            ]
         return fields
 
     # generate insert query
@@ -60,7 +64,7 @@ class dbSqlite():
         insert_query = self.insertQuery(tableName)
         insert_param = self.insertParam(tableName)
         f = open(filePath, 'r')
-        i = 0
+        i = 1
         for line in f:
             if i % 1000 == 0:
                 print('%d item added' % i)
@@ -71,8 +75,9 @@ class dbSqlite():
                 self.cursor.execute(insert_query, p)
                 self.conn.commit()
                 i = i + 1
+                p = list(map(lambda x: (p['positionId'], x), p['companyLabelList']))
+                q = "insert into lagou_company_label (position_id, label) values(?,?)"
+                self.cursor.executemany(q, p)
+                self.conn.commit()
         print("Import %d records" % (i))
         f.close()
-
-'''m = dbSqlite()
-m.importFromFileToTable('data/position_lagou.txt','lagou_basic')'''

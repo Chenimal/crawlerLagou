@@ -1,5 +1,4 @@
--- company_label_list needs to store to another table
-create table `lagou_basic`(
+;create table `lagou_basic`(
     `id` INTEGER PRIMARY KEY AUTOINCREMENT,
     `order_by` int(11) not null default '0',
     `leader_name` varchar(64) not null default '',
