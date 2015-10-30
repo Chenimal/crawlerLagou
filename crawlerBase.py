@@ -3,6 +3,7 @@ import urllib.parse
 import json
 import lib.functions as func
 import time
+import model
 
 '''
 Base Crawler for www.lagou.com
@@ -17,10 +18,22 @@ class CrawlerBase():
     # constructor
 
     def __init__(self):
+        self.total_new = 0
         self.table = 'lagou_basic'
         self.table2 = 'lagou_company_label'
         self.url_base = 'http://www.lagou.com'
         self.url_params = '/jobs/positionAjax.json?px=new'
+        try:
+            # generate insert query
+            self.model = model.dbSqlite()
+            self.iq_1 = self.model.insertQuery(self.table)
+            self.ip_1 = self.model.insertParam(self.table)
+        except Exception as e:
+            msg = time.strftime(
+                '%Y-%m-%d %H:%M:%S') + '[Error][Init] ' + str(e)
+            print(msg)
+            func.logger('crawler', msg)
+            exit()
 
     # single request(page)
     def fetchPageContent(self, post={}):
@@ -33,7 +46,8 @@ class CrawlerBase():
             d = json.loads(d)
             return d['content']['result']
         except Exception as e:
-            msg = time.strftime('%Y-%m-%d %H:%M:%S') + ' [error][network] ' + str(e)
+            msg = time.strftime(
+                '%Y-%m-%d %H:%M:%S') + ' [error][network] ' + str(e)
             print(msg)
             func.logger('crawler', msg)
             return []
@@ -68,7 +82,8 @@ class CrawlerBase():
             self.model.conn.commit()
             return True
         except Exception as e:
-            msg = time.strftime('%Y-%m-%d %H:%M:%S') + ' [error][database] ' + str(e)
+            msg = time.strftime(
+                '%Y-%m-%d %H:%M:%S') + ' [error][database] ' + str(e)
             print(msg)
             func.logger('crawler', msg)
             return False
