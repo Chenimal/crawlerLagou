@@ -1,18 +1,21 @@
 import sys
 import sqlite3
 import json
+import time
 import lib.functions as func
+
 
 class dbSqlite():
 
     def __init__(self):
         try:
-            self.db = sys.path[0]+'/data/db_crawler'
+            self.db = sys.path[0] + '/data/db_crawler'
             self.conn = sqlite3.connect(self.db)
             self.cursor = self.conn.cursor()
         except Exception as e:
             print('[error]' + str(e))
-            func.logger(self.__class__.__name__, str(e))
+            func.logger(self.__class__.__name__, time.strftime(
+                '%Y-%m-%d %H:%M:%S') + ' ' + str(e))
 
     def createTable(self, t_name, file):
         try:
@@ -21,7 +24,8 @@ class dbSqlite():
                 self.cursor.execute(q)
         except Exception as e:
             print('[Error]: ' + str(e))
-            func.logger(self.__class__.__name__, str(e))
+            func.logger(self.__class__.__name__, time.strftime(
+                '%Y-%m-%d %H:%M:%S') + ' ' + str(e))
 
     # show table contents
     def findAll(self, query):
@@ -60,7 +64,7 @@ class dbSqlite():
         return f
 
     # import data into table from file
-    def importFromFileToTable(self, tableName,filePath):
+    def importFromFileToTable(self, tableName, filePath):
         insert_query = self.insertQuery(tableName)
         insert_param = self.insertParam(tableName)
         f = open(filePath, 'r')
@@ -69,13 +73,15 @@ class dbSqlite():
             if i % 1000 == 0:
                 print('%d item added' % i)
             p = json.loads(line)
-            r = self.findAll("select * from %s where position_id = '%s'" % (tableName, p['positionId']))
+            r = self.findAll(
+                "select * from %s where position_id = '%s'" % (tableName, p['positionId']))
             if not r:
-                p = list(map(lambda x: p.get(x),insert_param))
+                p = list(map(lambda x: p.get(x), insert_param))
                 self.cursor.execute(insert_query, p)
                 self.conn.commit()
                 i = i + 1
-                p = list(map(lambda x: (p['positionId'], x), p['companyLabelList']))
+                p = list(
+                    map(lambda x: (p['positionId'], x), p['companyLabelList']))
                 q = "insert into lagou_company_label (position_id, label) values(?,?)"
                 self.cursor.executemany(q, p)
                 self.conn.commit()
