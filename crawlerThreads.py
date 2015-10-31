@@ -57,7 +57,7 @@ class CrawlerThreads(CrawlerBase):
             func.logger('crawler', time.strftime(
                 '%Y-%m-%d %H:%M:%S ') + '[error][main] ' + str(e))
         finally:
-            msg = '%s Time cost:%.4f New item:%d' % (
+            msg = '%s Time cost(Threads):%.4f New item:%d' % (
                 time.strftime('%Y-%m-%d %H:%M:%S'), time.time() - s, self.total_new)
             func.logger('crawler', msg)
 

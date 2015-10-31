@@ -46,7 +46,7 @@ class CrawlerSync(CrawlerBase):
             func.logger('crawler', time.strftime(
                 '%Y-%m-%d %H:%M:%S ') + '[error] ' + str(e))
         finally:
-            msg = '%s Total:%.2fs Request:%.4f Check duplicates:%.4f Save:%.4f New item:%d' % (
+            msg = '%s Time cost(Synchro):%.4f Request:%.4f Check duplicates:%.4f Save:%.4f New item:%d' % (
                 time.strftime('%Y-%m-%d %H:%M:%S'), self.t0, self.t1, self.t2, self.t3, self.total_new)
             func.logger('crawler', msg)
 
