@@ -31,7 +31,6 @@ class CrawlerBase():
         except Exception as e:
             msg = time.strftime(
                 '%Y-%m-%d %H:%M:%S') + '[Error][Init] ' + str(e)
-            print(msg)
             func.logger('crawler', msg)
             exit()
 
@@ -48,7 +47,6 @@ class CrawlerBase():
         except Exception as e:
             msg = time.strftime(
                 '%Y-%m-%d %H:%M:%S') + ' [error][network] ' + str(e)
-            print(msg)
             func.logger('crawler', msg)
             return []
 
@@ -84,7 +82,6 @@ class CrawlerBase():
         except Exception as e:
             msg = time.strftime(
                 '%Y-%m-%d %H:%M:%S') + ' [error][database] ' + str(e)
-            print(msg)
             func.logger('crawler', msg)
             return False
 

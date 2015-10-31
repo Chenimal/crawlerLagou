@@ -10,10 +10,9 @@ class dbSqlite():
     def __init__(self):
         try:
             self.db = sys.path[0] + '/data/db_crawler'
-            self.conn = sqlite3.connect(self.db)
+            self.conn = sqlite3.connect(self.db, check_same_thread=False)
             self.cursor = self.conn.cursor()
         except Exception as e:
-            print('[error]' + str(e))
             func.logger(self.__class__.__name__, time.strftime(
                 '%Y-%m-%d %H:%M:%S') + ' ' + str(e))
 
@@ -23,7 +22,6 @@ class dbSqlite():
                 q = f.read()
                 self.cursor.execute(q)
         except Exception as e:
-            print('[Error]: ' + str(e))
             func.logger(self.__class__.__name__, time.strftime(
                 '%Y-%m-%d %H:%M:%S') + ' ' + str(e))
 
