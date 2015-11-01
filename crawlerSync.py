@@ -6,7 +6,7 @@ import lib.functions as func
 Synchronous Crawler for www.lagou.com
 
 The most in-efficient way
-Avg.= 7.2 secs
+Avg.= 22.0 sec per 100 requests
 '''
 
 

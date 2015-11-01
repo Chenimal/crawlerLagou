@@ -8,7 +8,7 @@ import lib.functions as func
 Multi-thread Crawler
 
 Better than synchronous, but still not good enough
-Avg. = 2.2s
+Avg. = 3.0 sec per 100 requests
 '''
 
 

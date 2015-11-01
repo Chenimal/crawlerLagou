@@ -10,6 +10,7 @@ Asynchronous Crawler
 Coroutine in single thread (asynchronous I/O)
 Use asyncio and aiohttp packages
 So far the fastest method
+Avg.= 0.8 sec per 100 requests
 '''
 
 
@@ -25,7 +26,7 @@ class CrawlerAsync(CrawlerBase):
         '''
         try:
             response = yield from aiohttp.request('post', url=self.url_base + self.url_params, data={'pn': i})
-            d = yield from asyncio.wait_for(response.read_and_close(decode=True), timeout=1)
+            d = yield from asyncio.wait_for(response.read_and_close(decode=True), timeout=2)
             # save data
             c = self.savePageContent(d['content']['result'])
             print('Page %2d : %d items were added' % (i, c))
