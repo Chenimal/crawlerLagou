@@ -10,11 +10,6 @@ Asynchronous Crawler
 Coroutine in single thread (asynchronous I/O)
 Use asyncio and aiohttp packages
 So far the fastest method
-
-Todo:
-add timeout
-add erro handling for yield
-deepen understanding of yield
 '''
 
 
@@ -28,19 +23,29 @@ class CrawlerAsync(CrawlerBase):
         '''
         do not invoke fetchPageContent, use aiohttp instead
         '''
-        response = yield from aiohttp.request('post', url=self.url_base + self.url_params, data={'pn': i})
-        d = yield from response.read_and_close(decode=True)
-        # save data
-        c = self.savePageContent(d['content']['result'])
-        print('Page %d : %d items were added' % (i, c))
-        self.total_new = self.total_new + c
+        try:
+            response = yield from aiohttp.request('post', url=self.url_base + self.url_params, data={'pn': i})
+            d = yield from asyncio.wait_for(response.read_and_close(decode=True), timeout=1)
+            # save data
+            c = self.savePageContent(d['content']['result'])
+            print('Page %2d : %d items were added' % (i, c))
+            self.total_new = self.total_new + c
+        except Exception as e:
+            msg = time.strftime(
+                '%Y-%m-%d %H:%M:%S') + " [error][asyncio] " + str(e)
+            func.logger('crawler', msg)
+
+    @asyncio.coroutine
+    def bug():
+        raise Exception("not consumed")
 
     # trigger
     def fire(self):
         try:
             s = time.time()
             loop = asyncio.get_event_loop()
-            tasks = [self.singleRequest(i) for i in range(1, 31)]
+            tasks = [asyncio.async(self.singleRequest(i))
+                     for i in range(1, 31)]
             loop.run_until_complete(asyncio.wait(tasks))
             loop.close()
         except Exception as e:
