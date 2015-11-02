@@ -11,6 +11,10 @@ Coroutine in single thread (asynchronous I/O)
 Use asyncio and aiohttp packages
 So far the fastest method
 Avg.= 0.8 sec per 100 requests
+
+todo:
+timeout happens much frequently than multi-thread.
+need to dig into it
 '''
 
 
@@ -47,7 +51,7 @@ class CrawlerAsync(CrawlerBase):
             loop = asyncio.get_event_loop()
             tasks = [asyncio.async(self.singleRequest(i))
                      for i in range(1, 31)]
-            loop.run_until_complete(asyncio.wait(tasks))
+            loop.run_until_complete(asyncio.wait(tasks, timeout=5))
             loop.close()
         except Exception as e:
             print('Error: ' + str(e))
