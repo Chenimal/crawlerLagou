@@ -31,7 +31,7 @@ class CrawlerBase():
         except Exception as e:
             msg = time.strftime(
                 '%Y-%m-%d %H:%M:%S') + '[Error][Init] ' + str(e)
-            func.logger('crawler', msg)
+            func.logger('crawler_error', msg)
             exit()
 
     # single request(page)
@@ -40,14 +40,14 @@ class CrawlerBase():
             f = urllib.request.urlopen(
                 url=self.url_base + self.url_params,
                 data=urllib.parse.urlencode(post).encode('utf-8'),
-                timeout=2)
+                timeout=10)
             d = f.read().decode('utf-8')
             d = json.loads(d)
-            return d['content']['result']
+            return d['content']['positionResult']['result']
         except Exception as e:
             msg = time.strftime(
                 '%Y-%m-%d %H:%M:%S') + ' [error][network] ' + str(e)
-            func.logger('crawler', msg)
+            func.logger('crawler_error', msg)
             return []
 
     # save content for single request(page)
@@ -82,7 +82,7 @@ class CrawlerBase():
         except Exception as e:
             msg = time.strftime(
                 '%Y-%m-%d %H:%M:%S') + ' [error][database] ' + str(e)
-            func.logger('crawler', msg)
+            func.logger('crawler_error', msg)
             return False
 
     # single request

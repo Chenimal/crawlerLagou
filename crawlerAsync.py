@@ -11,10 +11,6 @@ Coroutine in single thread (asynchronous I/O)
 Use asyncio and aiohttp packages
 So far the fastest method
 Avg.= 0.8 sec per 100 requests
-
-todo:
-timeout happens much frequently than multi-thread.
-need to dig into it
 '''
 
 
@@ -23,24 +19,24 @@ class CrawlerAsync(CrawlerBase):
     def __init__(self):
         CrawlerBase.__init__(self)
 
-    @asyncio.coroutine
-    def singleRequest(self, i):
+    async def singleRequest(self, i):
         '''
         do not invoke fetchPageContent, use aiohttp instead
         '''
         try:
-            response = yield from aiohttp.request('post', url=self.url_base + self.url_params, data={'pn': i})
-            d = yield from asyncio.wait_for(response.read_and_close(decode=True), timeout=2)
-            # save data
-            c = self.savePageContent(d['content']['result'])
-            print('Page %2d : %d items were added' % (i, c))
-            self.total_new = self.total_new + c
+            with aiohttp.ClientSession() as session:
+                async with session.post(url=self.url_base + self.url_params, data={'pn': i}) as response:
+                    d = await response.json()
+                    # save data
+                    c = self.savePageContent(
+                        d['content']['positionResult']['result'])
+                    print('Page %2d : %d items were added' % (i, c))
+                    self.total_new = self.total_new + c
         except Exception as e:
             msg = time.strftime(
-                '%Y-%m-%d %H:%M:%S') + " [error][asyncio] " + str(e)
-            func.logger('crawler', msg)
+                '%Y-%m-%d %H:%M:%S') + " [error][asyncio] " + str(i) + ' ' + str(e)
+            func.logger('crawler_error', msg)
 
-    @asyncio.coroutine
     def bug():
         raise Exception("not consumed")
 
@@ -51,11 +47,11 @@ class CrawlerAsync(CrawlerBase):
             loop = asyncio.get_event_loop()
             tasks = [asyncio.async(self.singleRequest(i))
                      for i in range(1, 31)]
-            loop.run_until_complete(asyncio.wait(tasks, timeout=5))
+            loop.run_until_complete(asyncio.wait(tasks, timeout=100))
             loop.close()
         except Exception as e:
             print('Error: ' + str(e))
-            func.logger('crawler', time.strftime(
+            func.logger('crawler_error', time.strftime(
                 '%Y-%m-%d %H:%M:%S ') + '[error] ' + str(e))
         finally:
             msg = '%s Time cost(Asynchr):%.4f New item:%d' % (

@@ -54,7 +54,7 @@ class CrawlerThreads(CrawlerBase):
             self.task_queue.join()
 
         except Exception as e:
-            func.logger('crawler', time.strftime(
+            func.logger('crawler_error', time.strftime(
                 '%Y-%m-%d %H:%M:%S ') + '[error][main] ' + str(e))
         finally:
             msg = '%s Time cost(Threads):%.4f New item:%d' % (
