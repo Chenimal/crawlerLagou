@@ -24,13 +24,16 @@ class CrawlerAsync(CrawlerBase):
         do not invoke fetchPageContent, use aiohttp instead
         '''
         try:
+            t1 = time.time()
+            print('start request :' + str(i))
             with aiohttp.ClientSession() as session:
                 async with session.post(url=self.url_base + self.url_params, data={'pn': i}) as response:
                     d = await response.json()
                     # save data
                     c = self.savePageContent(
                         d['content']['positionResult']['result'])
-                    print('Page %2d : %d items were added' % (i, c))
+                    print('Page %2d : %d items added, using %.4f secs' %
+                          (i, c, time.time() - t1))
                     self.total_new = self.total_new + c
         except Exception as e:
             msg = time.strftime(
@@ -45,7 +48,7 @@ class CrawlerAsync(CrawlerBase):
         try:
             s = time.time()
             loop = asyncio.get_event_loop()
-            tasks = [asyncio.async(self.singleRequest(i))
+            tasks = [self.singleRequest(i)
                      for i in range(1, 31)]
             loop.run_until_complete(asyncio.wait(tasks, timeout=100))
             loop.close()

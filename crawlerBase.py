@@ -68,6 +68,7 @@ class CrawlerBase():
     # for single new record
     def addRecord(self, data):
         try:
+            data = self.model.process(data)
             p = list(map(lambda x: data.get(x), self.ip_1))
             self.model.cursor.execute(self.iq_1, p)
             self.model.conn.commit()

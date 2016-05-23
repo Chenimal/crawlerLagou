@@ -39,7 +39,7 @@ class dbSqlite():
                 'finance_stage', 'city', 'create_time_sort', 'company_id', 'industry_field', 'create_time', 'score', 'ad_word',
                 'salary', 'position_name', 'company_name', 'job_nature', 'position_types_map', 'total_count', 'position_first_type',
                 'rel_score', 'position_id', 'random_score', 'company_short_name', 'search_score', 'have_deliver',
-                'hr_score', 'position_type', 'position_advantage', 'adjust_score'
+                'hr_score', 'position_type', 'position_advantage', 'adjust_score', 'salary_from', 'salary_to'
             ]
         elif tableName == 'lagou_company_label':
             fields = [
@@ -85,3 +85,21 @@ class dbSqlite():
                 self.conn.commit()
         print("Import %d records" % (i))
         f.close()
+
+    # 保存前先 处理数据
+    def process(self, data):
+        # salary
+        i = data['salary'].find('-')
+        if i>0:
+            data['salaryFrom'] = data['salary'][0:i].strip('k')
+            data['salaryTo'] = data['salary'][i+1:].strip('k')
+        else:
+            data['salaryFrom'] = '0'
+            data['salaryTo'] = '99'
+            i = data['salary'].find('以上')
+            j = data['salary'].find('以下')
+            if i>0:
+                data['salaryFrom'] = data['salary'][0:i].strip('k')
+            elif j>0:
+                data['salaryTo'] = data['salary'][0:i].strip('k')
+        return data

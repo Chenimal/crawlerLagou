@@ -16,6 +16,8 @@
     `score` int(11) not null default '0',
     `ad_word` varchar(64) not null default '',
     `salary` varchar(64) not null default '',
+    `salary_from` varchar(32) not null default '',
+    `salary_to` varchar(32) not null default '',
     `position_name` varchar(64) not null default '',
     `company_name` varchar(64) not null default '',
     `job_nature` varchar(64) not null default '',
