@@ -98,8 +98,7 @@ class dbSqlite():
             data['salaryTo'] = '99'
             i = data['salary'].find('以上')
             j = data['salary'].find('以下')
-            if i>0:
+            if i>0 or j>0:
                 data['salaryFrom'] = data['salary'][0:i].strip('k')
-            elif j>0:
                 data['salaryTo'] = data['salary'][0:i].strip('k')
         return data

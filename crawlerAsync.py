@@ -18,6 +18,8 @@ class CrawlerAsync(CrawlerBase):
 
     def __init__(self):
         CrawlerBase.__init__(self)
+        # 使用长连接，所有请求都用一个 session
+        self.session = aiohttp.ClientSession()
 
     async def singleRequest(self, i):
         '''
@@ -26,15 +28,14 @@ class CrawlerAsync(CrawlerBase):
         try:
             t1 = time.time()
             print('start request :' + str(i))
-            with aiohttp.ClientSession() as session:
-                async with session.post(url=self.url_base + self.url_params, data={'pn': i}) as response:
-                    d = await response.json()
-                    # save data
-                    c = self.savePageContent(
-                        d['content']['positionResult']['result'])
-                    print('Page %2d : %d items added, using %.4f secs' %
-                          (i, c, time.time() - t1))
-                    self.total_new = self.total_new + c
+            async with self.session.post(url=self.url_base + self.url_params, data={'pn': i}) as response:
+                d = await response.json()
+                # save data
+                c = self.savePageContent(
+                    d['content']['positionResult']['result'])
+                print('Page %2d : %d items added, using %.4f secs' %
+                      (i, c, time.time() - t1))
+                self.total_new = self.total_new + c
         except Exception as e:
             msg = time.strftime(
                 '%Y-%m-%d %H:%M:%S') + " [error][asyncio] " + str(i) + ' ' + str(e)
@@ -51,6 +52,7 @@ class CrawlerAsync(CrawlerBase):
             tasks = [self.singleRequest(i)
                      for i in range(1, 31)]
             loop.run_until_complete(asyncio.wait(tasks, timeout=100))
+            self.session.close()
             loop.close()
         except Exception as e:
             print('Error: ' + str(e))
