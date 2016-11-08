@@ -73,12 +73,13 @@ class CrawlerBase():
             self.model.cursor.execute(self.iq_1, p)
             self.model.conn.commit()
             # insert into lagou_company_label
-            p = list(
-                map(lambda x: (data['positionId'], x), data['companyLabelList']))
-            q = "insert into " + self.table2 + \
-                " (position_id, label) values(?,?)"
-            self.model.cursor.executemany(q, p)
-            self.model.conn.commit()
+            if data['companyLabelList'] != None:
+                p = list(
+                    map(lambda x: (data['positionId'], x), data['companyLabelList']))
+                q = "insert into " + self.table2 + \
+                    " (position_id, label) values(?,?)"
+                self.model.cursor.executemany(q, p)
+                self.model.conn.commit()
             return True
         except Exception as e:
             msg = time.strftime(
